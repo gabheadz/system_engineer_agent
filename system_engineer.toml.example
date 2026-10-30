@@ -1,0 +1,19 @@
+# Copy to ./system_engineer.toml or ~/.config/system_engineer/config.toml
+
+[mcp]
+# If omitted, the codebase-memory-mcp entry from ~/.claude.json is used.
+command = "/Users/you/.local/bin/codebase-memory-mcp"
+args = []
+
+[models]
+# Used for any stack without its own entry. Built-in default: claude-opus-5-5
+default = "claude-opus-5-5"
+java = "claude-opus-5-5"
+elixir = "claude-sonnet-5-5"
+
+[skills]
+# Skills to enable per specialist. Omit a stack entry (or the whole section) for no skills.
+# `default` applies to any specialist without its own list. CLI --skill-<stack> wins.
+# default = ["skill1"]
+# java    = ["skill1", "skill2"]
+# elixir  = []

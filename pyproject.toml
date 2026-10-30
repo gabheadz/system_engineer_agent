@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "system-engineer-agent"
+version = "0.1.0"
+description = "Multi-agent static analysis of software components using the Claude Agent SDK and a code knowledge graph"
+requires-python = ">=3.11"
+dependencies = [
+    "claude-agent-sdk>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+system-engineer = "system_engineer.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/system_engineer"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
