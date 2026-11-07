@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .config import ConfigError, load_file_config, resolve_mcp_spec
+from .folders import FolderListError, read_folder_list
 from .orchestrator import RunConfig, run_all
 from .reporting import StateError
 from .specialists import DEFAULT_MODEL, SPECIALISTS
@@ -16,7 +17,12 @@ def build_parser() -> argparse.ArgumentParser:
         prog="system-engineer",
         description="Analyze software components with stack-specialized Claude agents.",
     )
-    p.add_argument("folders", nargs="+", type=Path, help="One or more component folders")
+    p.add_argument("folders", nargs="*", type=Path, help="One or more component folders")
+    p.add_argument(
+        "-f", "--folders-file", action="append", default=None, metavar="PATH", type=Path,
+        help="Read component folders from a text file, one path per line (repeatable; "
+             "combined with FOLDERS).",
+    )
     p.add_argument("-o", "--output-dir", type=Path, default=Path("reports"))
     p.add_argument("--concurrency", type=int, default=4, help="Max parallel specialists")
     p.add_argument("--timeout", type=float, default=1800, help="Per-component timeout (seconds)")
@@ -42,8 +48,23 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def resolve_folders(folder_args: list[Path], folders_files: list[Path] | None) -> list[Path]:
+    """Combine folders given on the command line with those read from --folders-file files."""
+    folders = [f.expanduser() for f in folder_args]
+    for list_file in folders_files or []:
+        folders.extend(read_folder_list(list_file.expanduser()))
+    if not folders:
+        raise FolderListError("no folders to scan; pass FOLDERS and/or --folders-file PATH")
+    return folders
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    try:
+        folders = resolve_folders(args.folders, args.folders_file)
+    except FolderListError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     file_cfg = load_file_config()
     try:
         mcp_spec = resolve_mcp_spec(args.mcp_command, args.mcp_args, file_cfg)
@@ -52,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     cfg = RunConfig(
-        folders=[f.expanduser() for f in args.folders],
+        folders=folders,
         out_dir=args.output_dir,
         mcp_spec=mcp_spec,
         concurrency=args.concurrency,
