@@ -17,8 +17,13 @@ Requires the `codebase-memory-mcp` server. It is auto-discovered from `~/.claude
 
 ```bash
 .venv/bin/system-engineer ./svc-a ./svc-b ./svc-c -o reports --concurrency 3
+.venv/bin/system-engineer --folders-file components.txt -o reports --concurrency 3
 .venv/bin/system-engineer ./svc-a --model-java claude-opus-5-5 --model-elixir claude-sonnet-5-5
 ```
+
+`--folders-file` (`-f`) reads one folder path per line, can be repeated, and can be combined with
+folders given on the command line. Blank lines are ignored and relative paths resolve from the
+current directory, exactly like folders passed as arguments.
 
 Output: `reports/<component>-<stack>.md` per folder plus `reports/SUMMARY.md` (severity table and an
 "Incomplete" section for failed or skipped folders). Exit code is 1 if any folder is incomplete.
